@@ -11,6 +11,7 @@ $(document).ready(function () {
 
 let isAuthenticated = false;
 
+// Функция для отображения ошибок
 function showError(message) {
   const notification = document.getElementById('authNotification');
   if (notification) {
@@ -20,73 +21,70 @@ function showError(message) {
       notification.style.display = 'none';
     }, 5000);
   }
+  console.error('Error:', message);
+}
+
+// Функция для отображения успешных сообщений
+function showSuccess(message) {
+  const notification = document.getElementById('authNotification');
+  if (notification) {
+    notification.className = 'alert alert-success mb-3';
+    notification.textContent = message;
+    notification.style.display = 'block';
+    setTimeout(() => {
+      notification.style.display = 'none';
+      notification.className = 'alert alert-danger mb-3';
+    }, 3000);
+  }
+  console.log('Success:', message);
 }
 
 function onSignIn(googleUser) {
-    console.log('=== Starting Sign In Process ===');
-    
     try {
+        showSuccess('Успешная авторизация...');
+        
         // 1. Получаем данные профиля
         const profile = googleUser.getBasicProfile();
-        console.log('Profile data:', {
-            name: profile.getName(),
-            email: profile.getEmail(),
-            imageUrl: profile.getImageUrl()
-        });
+        console.log('Успешный вход:', profile.getName());
 
         // 2. Скрываем экран авторизации
         const authScreen = document.getElementById('authScreen');
-        console.log('Auth screen found:', !!authScreen);
-        if (authScreen) {
-            authScreen.style.display = 'none';
-        } else {
-            console.error('Auth screen element not found!');
+        if (!authScreen) {
+            throw new Error('Не найден элемент authScreen');
         }
+        authScreen.style.display = 'none';
 
         // 3. Показываем основной контент
         const mainContent = document.getElementById('mainContent');
-        console.log('Main content found:', !!mainContent);
-        if (mainContent) {
-            mainContent.style.display = 'block';
-        } else {
-            console.error('Main content element not found!');
+        if (!mainContent) {
+            throw new Error('Не найден элемент mainContent');
         }
+        mainContent.style.display = 'block';
 
         // 4. Обновляем информацию пользователя
         const userSection = document.getElementById('userSection');
         const userName = document.getElementById('userName');
         const userImage = document.getElementById('userImage');
         
-        console.log('User elements found:', {
-            section: !!userSection,
-            name: !!userName,
-            image: !!userImage
-        });
-
-        if (userSection && userName && userImage) {
-            userSection.style.display = 'block';
-            userName.textContent = profile.getName();
-            userImage.src = profile.getImageUrl();
+        if (!userSection || !userName || !userImage) {
+            throw new Error('Не найдены элементы профиля пользователя');
         }
+
+        userSection.style.display = 'block';
+        userName.textContent = profile.getName();
+        userImage.src = profile.getImageUrl();
 
         // 5. Сохраняем состояние
         sessionStorage.setItem('isAuthenticated', 'true');
         sessionStorage.setItem('userName', profile.getName());
         sessionStorage.setItem('userImage', profile.getImageUrl());
-        
-        console.log('Session storage updated');
 
         // 6. Загружаем данные
-        console.log('Starting to load tasks...');
         loadTasks();
-        
-        console.log('=== Sign In Process Completed ===');
 
     } catch (error) {
-        console.error('=== Sign In Error ===');
-        console.error('Error details:', error);
-        console.error('Error stack:', error.stack);
-        showError('Ошибка при входе: ' + error.message);
+        console.error('Ошибка при входе:', error);
+        showError(error.message);
     }
 }
 
