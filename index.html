@@ -179,10 +179,7 @@
         <h2 class="mb-4">Service-Control</h2>
         <div class="mb-3">Пожалуйста, войдите для доступа к системе</div>
         <div id="authNotification" class="alert alert-danger mb-3" style="display: none;"></div>
-        <button id="googleSignInBtn" class="btn btn-light btn-lg d-flex align-items-center mx-auto">
-          <img src="https://developers.google.com/identity/images/g-logo.png" alt="Google logo" style="width: 24px; margin-right: 10px;">
-          Войти через Google
-        </button>
+        <div class="g-signin2" data-onsuccess="onSignIn" data-width="240" data-height="50" data-longtitle="true" data-theme="dark"></div>
       </div>
     </div>
 
@@ -487,32 +484,7 @@
       type="text/javascript"
       src="https://www.gstatic.com/charts/loader.js"
     ></script>
-    <script src="https://apis.google.com/js/api:client.js"></script>
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
     <script type="text/javascript" src="main.js"></script>
-    <script>
-      // Инициализация Google Sign-In при загрузке страницы
-      window.onload = function() {
-        gapi.load('auth2', function() {
-          gapi.auth2.init({
-            client_id: '594163108076-fhiclj92ko2ej83j9js9oosqmaijf56n.apps.googleusercontent.com',
-            cookiepolicy: 'single_host_origin',
-            scope: 'profile email'
-          }).then(function(auth2) {
-            // Привязываем кнопку к auth2
-            auth2.attachClickHandler('googleSignInBtn', {},
-              function(googleUser) {
-                console.log('Успешный вход');
-                onSignIn(googleUser);
-              },
-              function(error) {
-                console.error('Ошибка входа:', error);
-                document.getElementById('authNotification').textContent = 'Ошибка входа: ' + error.error;
-                document.getElementById('authNotification').style.display = 'block';
-              }
-            );
-          });
-        });
-      };
-    </script>
   </body>
 </html>
