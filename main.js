@@ -1,5 +1,5 @@
 var myApp =
-  "https://script.google.com/macros/s/AKfycbz8TzHCxYt0UGgcICwg1NCaWoGOokMCMiwd-ivEtGVnFODtivbJtN6m_p8KPSFstWTp/exec";
+  "https://script.google.com/macros/s/AKfycbwha7wX1sorzB7l6a9H6-gG8p65IvUUcFG7j5EZ5-UlMYZSrgrn47M1ctvCX6OWilNl/exec";
 var tasks = "1tUkWfP-Ci68M-bh4nsEI0VxlOoEvvNv64fhwhwivNCU";
 var sName = "Service Control";
 //var eDate = "Активно до: 18.08.2024";
@@ -23,12 +23,15 @@ function onSignIn(googleUser) {
   var body = `id_token=${encodeURIComponent(
     id_token
   )}&action=${encodeURIComponent(action)}`;
-
+  var userNameElement = document.getElementById("userName");
   var xhr = new XMLHttpRequest();
-  xhr.open("POST", myApp, true);
+  xhr.open(
+    "POST",
+    "https://oauth2.googleapis.com/tokeninfo?id_token=" + id_token
+  );
   xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
   xhr.onload = function () {
-    console.log("Signed in as: " + xhr.responseText);
+    userNameElement.innerText = xhr.responseText;
   };
   xhr.send(body);
 }
