@@ -10,60 +10,104 @@ $(document).ready(function () {
 });
 
 let isAuthenticated = false;
+let auth2;
 
-// Инициализация Google Sign-In
+function showError(message) {
+  const notification = document.getElementById('authNotification');
+  if (notification) {
+    notification.textContent = message;
+    notification.style.display = 'block';
+    setTimeout(() => {
+      notification.style.display = 'none';
+    }, 5000);
+  }
+}
+
+function renderButton() {
+  gapi.signin2.render('googleSignInButton', {
+    'scope': 'profile email',
+    'width': 240,
+    'height': 50,
+    'longtitle': true,
+    'theme': 'dark',
+    'onsuccess': onSignIn,
+    'onfailure': function(error) {
+      console.error('Google Sign In failed:', error);
+      showError('Ошибка входа через Google. Пожалуйста, попробуйте еще раз.');
+    }
+  });
+}
+
 function initGoogleSignIn() {
   gapi.load('auth2', function() {
     gapi.auth2.init({
       client_id: '594163108076-fhiclj92ko2ej83j9js9oosqmaijf56n.apps.googleusercontent.com',
-      scope: 'profile email'
-    }).then(function() {
+    }).then(function(authInstance) {
+      auth2 = authInstance;
       console.log('Google Auth initialized');
+      renderButton();
+      
       // Проверяем, авторизован ли пользователь
-      if (gapi.auth2.getAuthInstance().isSignedIn.get()) {
-        onSignIn(gapi.auth2.getAuthInstance().currentUser.get());
+      if (auth2.isSignedIn.get()) {
+        onSignIn(auth2.currentUser.get());
       }
-    }, function(error) {
+    }).catch(function(error) {
       console.error('Google Auth initialization error:', error);
+      showError('Ошибка инициализации Google Auth. Пожалуйста, обновите страницу.');
     });
   });
 }
 
-// Вызываем инициализацию при загрузке страницы
-window.addEventListener('load', initGoogleSignIn);
-
 function onSignIn(googleUser) {
-  console.log('Sign-in function called');
-  const profile = googleUser.getBasicProfile();
-  const id_token = googleUser.getAuthResponse().id_token;
-  
-  console.log('Got profile:', profile.getName());
-  
-  // Verify token on backend
-  const xhr = new XMLHttpRequest();
-  xhr.open('POST', 'https://oauth2.googleapis.com/tokeninfo?id_token=' + id_token);
-  xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-  xhr.onload = function() {
-    if (xhr.status === 200) {
-      console.log('Token verified successfully');
-      
-      // Token verified, update UI
-      isAuthenticated = true;
-      
-      try {
-        // Hide auth screen and show main content
-        const authScreen = document.getElementById('authScreen');
-        const mainContent = document.getElementById('mainContent');
+  try {
+    console.log('Sign-in function called');
+    const profile = googleUser.getBasicProfile();
+    const id_token = googleUser.getAuthResponse().id_token;
+    
+    if (!profile || !id_token) {
+      throw new Error('Не удалось получить данные профиля');
+    }
+    
+    console.log('Got profile:', profile.getName());
+    
+    // Verify token on backend
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', 'https://oauth2.googleapis.com/tokeninfo?id_token=' + id_token);
+    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+    
+    xhr.onload = function() {
+      if (xhr.status === 200) {
+        console.log('Token verified successfully');
         
-        if (authScreen && mainContent) {
+        // Token verified, update UI
+        isAuthenticated = true;
+        
+        try {
+          // Hide auth screen and show main content
+          const authScreen = document.getElementById('authScreen');
+          const mainContent = document.getElementById('mainContent');
+          
+          if (!authScreen || !mainContent) {
+            throw new Error('Не найдены необходимые элементы страницы');
+          }
+          
           authScreen.style.display = 'none';
           mainContent.style.display = 'block';
           
           // Update user info in sidebar
-          document.getElementById('loginSection').style.display = 'none';
-          document.getElementById('userSection').style.display = 'block';
-          document.getElementById('userName').innerText = profile.getName();
-          document.getElementById('userImage').src = profile.getImageUrl();
+          const loginSection = document.getElementById('loginSection');
+          const userSection = document.getElementById('userSection');
+          const userName = document.getElementById('userName');
+          const userImage = document.getElementById('userImage');
+          
+          if (!loginSection || !userSection || !userName || !userImage) {
+            throw new Error('Не найдены элементы профиля пользователя');
+          }
+          
+          loginSection.style.display = 'none';
+          userSection.style.display = 'block';
+          userName.textContent = profile.getName();
+          userImage.src = profile.getImageUrl();
           
           // Store auth state
           sessionStorage.setItem('isAuthenticated', 'true');
@@ -72,21 +116,41 @@ function onSignIn(googleUser) {
           
           // Load initial data
           loadTasks();
-        } else {
-          console.error('Required elements not found');
+          
+        } catch (error) {
+          console.error('Error updating UI:', error);
+          showError('Ошибка обновления интерфейса: ' + error.message);
         }
-      } catch (error) {
-        console.error('Error updating UI:', error);
+      } else {
+        console.error('Token verification failed:', xhr.status, xhr.responseText);
+        showError('Ошибка проверки токена. Пожалуйста, попробуйте войти снова.');
       }
-    } else {
-      console.error('Token verification failed:', xhr.status, xhr.responseText);
-    }
-  };
-  xhr.onerror = function() {
-    console.error('Token verification request failed');
-  };
-  xhr.send();
+    };
+    
+    xhr.onerror = function() {
+      console.error('Token verification request failed');
+      showError('Ошибка сети при проверке токена. Проверьте подключение к интернету.');
+    };
+    
+    xhr.send();
+    
+  } catch (error) {
+    console.error('Error in sign-in process:', error);
+    showError('Ошибка при входе: ' + error.message);
+  }
 }
+
+// Проверяем состояние авторизации при загрузке страницы
+document.addEventListener('DOMContentLoaded', function() {
+  if (sessionStorage.getItem('isAuthenticated') === 'true') {
+    const mainContent = document.getElementById('mainContent');
+    const authScreen = document.getElementById('authScreen');
+    if (mainContent && authScreen) {
+      mainContent.style.display = 'block';
+      authScreen.style.display = 'none';
+    }
+  }
+});
 
 function signOut() {
   const auth2 = gapi.auth2.getAuthInstance();
