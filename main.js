@@ -11,9 +11,33 @@ $(document).ready(function () {
 
 let isAuthenticated = false;
 
+// Инициализация Google Sign-In
+function initGoogleSignIn() {
+  gapi.load('auth2', function() {
+    gapi.auth2.init({
+      client_id: '594163108076-fhiclj92ko2ej83j9js9oosqmaijf56n.apps.googleusercontent.com',
+      scope: 'profile email'
+    }).then(function() {
+      console.log('Google Auth initialized');
+      // Проверяем, авторизован ли пользователь
+      if (gapi.auth2.getAuthInstance().isSignedIn.get()) {
+        onSignIn(gapi.auth2.getAuthInstance().currentUser.get());
+      }
+    }, function(error) {
+      console.error('Google Auth initialization error:', error);
+    });
+  });
+}
+
+// Вызываем инициализацию при загрузке страницы
+window.addEventListener('load', initGoogleSignIn);
+
 function onSignIn(googleUser) {
+  console.log('Sign-in function called');
   const profile = googleUser.getBasicProfile();
   const id_token = googleUser.getAuthResponse().id_token;
+  
+  console.log('Got profile:', profile.getName());
   
   // Verify token on backend
   const xhr = new XMLHttpRequest();
@@ -21,27 +45,45 @@ function onSignIn(googleUser) {
   xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
   xhr.onload = function() {
     if (xhr.status === 200) {
+      console.log('Token verified successfully');
+      
       // Token verified, update UI
       isAuthenticated = true;
       
-      // Hide auth screen and show main content
-      document.getElementById('authScreen').style.display = 'none';
-      document.getElementById('mainContent').style.display = 'block';
-      
-      // Update user info in sidebar
-      document.getElementById('loginSection').style.display = 'none';
-      document.getElementById('userSection').style.display = 'block';
-      document.getElementById('userName').innerText = profile.getName();
-      document.getElementById('userImage').src = profile.getImageUrl();
-      
-      // Store auth state
-      sessionStorage.setItem('isAuthenticated', 'true');
-      sessionStorage.setItem('userName', profile.getName());
-      sessionStorage.setItem('userImage', profile.getImageUrl());
-      
-      // Load initial data
-      loadTasks();
+      try {
+        // Hide auth screen and show main content
+        const authScreen = document.getElementById('authScreen');
+        const mainContent = document.getElementById('mainContent');
+        
+        if (authScreen && mainContent) {
+          authScreen.style.display = 'none';
+          mainContent.style.display = 'block';
+          
+          // Update user info in sidebar
+          document.getElementById('loginSection').style.display = 'none';
+          document.getElementById('userSection').style.display = 'block';
+          document.getElementById('userName').innerText = profile.getName();
+          document.getElementById('userImage').src = profile.getImageUrl();
+          
+          // Store auth state
+          sessionStorage.setItem('isAuthenticated', 'true');
+          sessionStorage.setItem('userName', profile.getName());
+          sessionStorage.setItem('userImage', profile.getImageUrl());
+          
+          // Load initial data
+          loadTasks();
+        } else {
+          console.error('Required elements not found');
+        }
+      } catch (error) {
+        console.error('Error updating UI:', error);
+      }
+    } else {
+      console.error('Token verification failed:', xhr.status, xhr.responseText);
     }
+  };
+  xhr.onerror = function() {
+    console.error('Token verification request failed');
   };
   xhr.send();
 }
