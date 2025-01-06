@@ -40,51 +40,36 @@ function showSuccess(message) {
 }
 
 function onSignIn(googleUser) {
+    alert('Начало входа'); // Отладочное сообщение
+    console.log('onSignIn запущен');
+    
     try {
-        showSuccess('Успешная авторизация...');
-        
         // 1. Получаем данные профиля
         const profile = googleUser.getBasicProfile();
-        console.log('Успешный вход:', profile.getName());
-
-        // 2. Скрываем экран авторизации
-        const authScreen = document.getElementById('authScreen');
-        if (!authScreen) {
-            throw new Error('Не найден элемент authScreen');
-        }
-        authScreen.style.display = 'none';
-
-        // 3. Показываем основной контент
-        const mainContent = document.getElementById('mainContent');
-        if (!mainContent) {
-            throw new Error('Не найден элемент mainContent');
-        }
-        mainContent.style.display = 'block';
-
-        // 4. Обновляем информацию пользователя
-        const userSection = document.getElementById('userSection');
-        const userName = document.getElementById('userName');
-        const userImage = document.getElementById('userImage');
+        alert('Получен профиль: ' + profile.getName()); // Отладочное сообщение
         
-        if (!userSection || !userName || !userImage) {
-            throw new Error('Не найдены элементы профиля пользователя');
-        }
-
-        userSection.style.display = 'block';
-        userName.textContent = profile.getName();
-        userImage.src = profile.getImageUrl();
-
-        // 5. Сохраняем состояние
+        // 2. Скрываем экран авторизации и показываем контент
+        document.getElementById('authScreen').style.display = 'none';
+        document.getElementById('mainContent').style.display = 'block';
+        
+        // 3. Обновляем UI
+        document.getElementById('userSection').style.display = 'block';
+        document.getElementById('userName').textContent = profile.getName();
+        document.getElementById('userImage').src = profile.getImageUrl();
+        
+        // 4. Сохраняем состояние
         sessionStorage.setItem('isAuthenticated', 'true');
         sessionStorage.setItem('userName', profile.getName());
         sessionStorage.setItem('userImage', profile.getImageUrl());
-
-        // 6. Загружаем данные
+        
+        // 5. Загружаем данные
         loadTasks();
-
+        
+        alert('Вход успешно завершен'); // Отладочное сообщение
+        
     } catch (error) {
+        alert('Ошибка: ' + error.message); // Отладочное сообщение
         console.error('Ошибка при входе:', error);
-        showError(error.message);
     }
 }
 
