@@ -10,7 +10,6 @@ $(document).ready(function () {
 });
 
 let isAuthenticated = false;
-let auth2;
 
 function showError(message) {
   const notification = document.getElementById('authNotification');
@@ -21,41 +20,6 @@ function showError(message) {
       notification.style.display = 'none';
     }, 5000);
   }
-}
-
-function renderButton() {
-  gapi.signin2.render('googleSignInButton', {
-    'scope': 'profile email',
-    'width': 240,
-    'height': 50,
-    'longtitle': true,
-    'theme': 'dark',
-    'onsuccess': onSignIn,
-    'onfailure': function(error) {
-      console.error('Google Sign In failed:', error);
-      showError('Ошибка входа через Google. Пожалуйста, попробуйте еще раз.');
-    }
-  });
-}
-
-function initGoogleSignIn() {
-  gapi.load('auth2', function() {
-    gapi.auth2.init({
-      client_id: '594163108076-fhiclj92ko2ej83j9js9oosqmaijf56n.apps.googleusercontent.com',
-    }).then(function(authInstance) {
-      auth2 = authInstance;
-      console.log('Google Auth initialized');
-      renderButton();
-      
-      // Проверяем, авторизован ли пользователь
-      if (auth2.isSignedIn.get()) {
-        onSignIn(auth2.currentUser.get());
-      }
-    }).catch(function(error) {
-      console.error('Google Auth initialization error:', error);
-      showError('Ошибка инициализации Google Auth. Пожалуйста, обновите страницу.');
-    });
-  });
 }
 
 function onSignIn(googleUser) {
