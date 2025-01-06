@@ -1,5 +1,5 @@
 var myApp =
-  "https://script.google.com/macros/s/AKfycbyKSNW5Ugk44oklu0bkNvN2QQMQRk2aFeyHN-9PaL1SHxq-Aym-Sz_6idBOkLBSfXLB/exec";
+  "https://script.google.com/macros/s/AKfycbwha7wX1sorzB7l6a9H6-gG8p65IvUUcFG7j5EZ5-UlMYZSrgrn47M1ctvCX6OWilNl/exec";
 var tasks = "1tUkWfP-Ci68M-bh4nsEI0VxlOoEvvNv64fhwhwivNCU";
 var sName = "Service Control";
 //var eDate = "Активно до: 18.08.2024";
@@ -8,6 +8,38 @@ $("#offcanvasNavbarLabel").html(sName);
 $(document).ready(function () {
   loadTasks();
 });
+
+/*function onSignIn(googleUser) {
+  var profile = googleUser.getBasicProfile();
+  console.log("ID: " + profile.getId()); // Do not send to your backend! Use an ID token instead.
+  console.log("Name: " + profile.getName());
+  console.log("Image URL: " + profile.getImageUrl());
+  console.log("Email: " + profile.getEmail()); // This is null if the 'email' scope is not present.
+}*/
+
+function onSignIn(googleUser) {
+  var id_token = googleUser.getAuthResponse().id_token;
+  var action = "addUser";
+  var body = `id_token=${encodeURIComponent(
+    id_token
+  )}&action=${encodeURIComponent(action)}`;
+
+  var xhr = new XMLHttpRequest();
+  xhr.open("POST", myApp, true);
+  xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
+  xhr.onload = function () {
+    console.log("Signed in as: " + xhr.responseText);
+  };
+  xhr.send(body);
+}
+
+function signOut() {
+  var auth2 = gapi.auth2.getAuthInstance();
+  auth2.signOut().then(function () {
+    console.log("User signed out.");
+  });
+}
+
 var uStatus = [];
 const triggerTabList = document.querySelectorAll("#nav-tab button");
 triggerTabList.forEach((triggerEl) => {
