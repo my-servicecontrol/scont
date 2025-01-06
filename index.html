@@ -484,6 +484,19 @@
       type="text/javascript"
       src="https://www.gstatic.com/charts/loader.js"
     ></script>
+    <script>
+      // Проверяем, загружен ли Google API
+      function checkGoogleAPI() {
+        if (typeof gapi === 'undefined') {
+          alert('Google API не загружен');
+          return;
+        }
+        alert('Google API загружен');
+      }
+      
+      // Проверяем через 2 секунды после загрузки страницы
+      setTimeout(checkGoogleAPI, 2000);
+    </script>
     <script src="https://apis.google.com/js/platform.js" async defer></script>
     <script type="text/javascript" src="main.js"></script>
   </body>
