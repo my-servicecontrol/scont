@@ -23,85 +23,71 @@ function showError(message) {
 }
 
 function onSignIn(googleUser) {
-  try {
-    console.log('Sign-in function called');
-    const profile = googleUser.getBasicProfile();
-    const id_token = googleUser.getAuthResponse().id_token;
+    console.log('=== Starting Sign In Process ===');
     
-    if (!profile || !id_token) {
-      throw new Error('Не удалось получить данные профиля');
-    }
-    
-    console.log('Got profile:', profile.getName());
-    
-    // Verify token on backend
-    const xhr = new XMLHttpRequest();
-    xhr.open('POST', 'https://oauth2.googleapis.com/tokeninfo?id_token=' + id_token);
-    xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
-    
-    xhr.onload = function() {
-      if (xhr.status === 200) {
-        console.log('Token verified successfully');
-        
-        // Token verified, update UI
-        isAuthenticated = true;
-        
-        try {
-          // Hide auth screen and show main content
-          const authScreen = document.getElementById('authScreen');
-          const mainContent = document.getElementById('mainContent');
-          
-          if (!authScreen || !mainContent) {
-            throw new Error('Не найдены необходимые элементы страницы');
-          }
-          
-          authScreen.style.display = 'none';
-          mainContent.style.display = 'block';
-          
-          // Update user info in sidebar
-          const loginSection = document.getElementById('loginSection');
-          const userSection = document.getElementById('userSection');
-          const userName = document.getElementById('userName');
-          const userImage = document.getElementById('userImage');
-          
-          if (!loginSection || !userSection || !userName || !userImage) {
-            throw new Error('Не найдены элементы профиля пользователя');
-          }
-          
-          loginSection.style.display = 'none';
-          userSection.style.display = 'block';
-          userName.textContent = profile.getName();
-          userImage.src = profile.getImageUrl();
-          
-          // Store auth state
-          sessionStorage.setItem('isAuthenticated', 'true');
-          sessionStorage.setItem('userName', profile.getName());
-          sessionStorage.setItem('userImage', profile.getImageUrl());
-          
-          // Load initial data
-          loadTasks();
-          
-        } catch (error) {
-          console.error('Error updating UI:', error);
-          showError('Ошибка обновления интерфейса: ' + error.message);
+    try {
+        // 1. Получаем данные профиля
+        const profile = googleUser.getBasicProfile();
+        console.log('Profile data:', {
+            name: profile.getName(),
+            email: profile.getEmail(),
+            imageUrl: profile.getImageUrl()
+        });
+
+        // 2. Скрываем экран авторизации
+        const authScreen = document.getElementById('authScreen');
+        console.log('Auth screen found:', !!authScreen);
+        if (authScreen) {
+            authScreen.style.display = 'none';
+        } else {
+            console.error('Auth screen element not found!');
         }
-      } else {
-        console.error('Token verification failed:', xhr.status, xhr.responseText);
-        showError('Ошибка проверки токена. Пожалуйста, попробуйте войти снова.');
-      }
-    };
-    
-    xhr.onerror = function() {
-      console.error('Token verification request failed');
-      showError('Ошибка сети при проверке токена. Проверьте подключение к интернету.');
-    };
-    
-    xhr.send();
-    
-  } catch (error) {
-    console.error('Error in sign-in process:', error);
-    showError('Ошибка при входе: ' + error.message);
-  }
+
+        // 3. Показываем основной контент
+        const mainContent = document.getElementById('mainContent');
+        console.log('Main content found:', !!mainContent);
+        if (mainContent) {
+            mainContent.style.display = 'block';
+        } else {
+            console.error('Main content element not found!');
+        }
+
+        // 4. Обновляем информацию пользователя
+        const userSection = document.getElementById('userSection');
+        const userName = document.getElementById('userName');
+        const userImage = document.getElementById('userImage');
+        
+        console.log('User elements found:', {
+            section: !!userSection,
+            name: !!userName,
+            image: !!userImage
+        });
+
+        if (userSection && userName && userImage) {
+            userSection.style.display = 'block';
+            userName.textContent = profile.getName();
+            userImage.src = profile.getImageUrl();
+        }
+
+        // 5. Сохраняем состояние
+        sessionStorage.setItem('isAuthenticated', 'true');
+        sessionStorage.setItem('userName', profile.getName());
+        sessionStorage.setItem('userImage', profile.getImageUrl());
+        
+        console.log('Session storage updated');
+
+        // 6. Загружаем данные
+        console.log('Starting to load tasks...');
+        loadTasks();
+        
+        console.log('=== Sign In Process Completed ===');
+
+    } catch (error) {
+        console.error('=== Sign In Error ===');
+        console.error('Error details:', error);
+        console.error('Error stack:', error.stack);
+        showError('Ошибка при входе: ' + error.message);
+    }
 }
 
 // Проверяем состояние авторизации при загрузке страницы
