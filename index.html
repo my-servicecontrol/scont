@@ -180,7 +180,7 @@
         <h2 class="mb-4">Service-Control</h2>
         <div class="mb-3">Пожалуйста, войдите для доступа к системе</div>
         <div id="authNotification" class="alert alert-danger mb-3" style="display: none;"></div>
-        <div id="googleSignInButton"></div>
+        <div class="g-signin2" data-onsuccess="onSuccess" data-width="240" data-height="50" data-longtitle="true" data-theme="dark"></div>
       </div>
     </div>
 
@@ -485,7 +485,27 @@
       type="text/javascript"
       src="https://www.gstatic.com/charts/loader.js"
     ></script>
-    <script src="https://apis.google.com/js/platform.js?onload=initGoogleSignIn" async defer></script>
+    <script src="https://apis.google.com/js/platform.js" async defer></script>
     <script type="text/javascript" src="main.js"></script>
+    <script>
+      function onSuccess(googleUser) {
+        console.log('Logged in as: ' + googleUser.getBasicProfile().getName());
+        onSignIn(googleUser);
+      }
+      function onFailure(error) {
+        console.log(error);
+      }
+      function renderButton() {
+        gapi.signin2.render('googleSignInButton', {
+          'scope': 'profile email',
+          'width': 240,
+          'height': 50,
+          'longtitle': true,
+          'theme': 'dark',
+          'onsuccess': onSuccess,
+          'onfailure': onFailure
+        });
+      }
+    </script>
   </body>
 </html>
