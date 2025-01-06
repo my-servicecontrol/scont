@@ -9,39 +9,83 @@ $(document).ready(function () {
   loadTasks();
 });
 
-/*function onSignIn(googleUser) {
-  var profile = googleUser.getBasicProfile();
-  console.log("ID: " + profile.getId()); // Do not send to your backend! Use an ID token instead.
-  console.log("Name: " + profile.getName());
-  console.log("Image URL: " + profile.getImageUrl());
-  console.log("Email: " + profile.getEmail()); // This is null if the 'email' scope is not present.
-}*/
+let isAuthenticated = false;
 
 function onSignIn(googleUser) {
-  var id_token = googleUser.getAuthResponse().id_token;
-  var action = "addUser";
-  var body = `id_token=${encodeURIComponent(
-    id_token
-  )}&action=${encodeURIComponent(action)}`;
-  var userNameElement = document.getElementById("userName");
-  var xhr = new XMLHttpRequest();
-  xhr.open(
-    "POST",
-    "https://oauth2.googleapis.com/tokeninfo?id_token=" + id_token
-  );
-  xhr.setRequestHeader("Content-Type", "application/x-www-form-urlencoded");
-  xhr.onload = function () {
-    userNameElement.innerText = xhr.responseText;
+  const profile = googleUser.getBasicProfile();
+  const id_token = googleUser.getAuthResponse().id_token;
+  
+  // Verify token on backend
+  const xhr = new XMLHttpRequest();
+  xhr.open('POST', 'https://oauth2.googleapis.com/tokeninfo?id_token=' + id_token);
+  xhr.setRequestHeader('Content-Type', 'application/x-www-form-urlencoded');
+  xhr.onload = function() {
+    if (xhr.status === 200) {
+      // Token verified, update UI
+      isAuthenticated = true;
+      
+      // Hide auth screen and show main content
+      document.getElementById('authScreen').style.display = 'none';
+      document.getElementById('mainContent').style.display = 'block';
+      
+      // Update user info in sidebar
+      document.getElementById('loginSection').style.display = 'none';
+      document.getElementById('userSection').style.display = 'block';
+      document.getElementById('userName').innerText = profile.getName();
+      document.getElementById('userImage').src = profile.getImageUrl();
+      
+      // Store auth state
+      sessionStorage.setItem('isAuthenticated', 'true');
+      sessionStorage.setItem('userName', profile.getName());
+      sessionStorage.setItem('userImage', profile.getImageUrl());
+      
+      // Load initial data
+      loadTasks();
+    }
   };
-  xhr.send(body);
+  xhr.send();
 }
 
 function signOut() {
-  var auth2 = gapi.auth2.getAuthInstance();
-  auth2.signOut().then(function () {
-    console.log("User signed out.");
+  const auth2 = gapi.auth2.getAuthInstance();
+  auth2.signOut().then(function() {
+    // Update UI
+    isAuthenticated = false;
+    
+    // Show auth screen and hide main content
+    document.getElementById('authScreen').style.display = 'flex';
+    document.getElementById('mainContent').style.display = 'none';
+    
+    // Reset user section
+    document.getElementById('loginSection').style.display = 'block';
+    document.getElementById('userSection').style.display = 'none';
+    
+    // Clear auth state
+    sessionStorage.removeItem('isAuthenticated');
+    sessionStorage.removeItem('userName');
+    sessionStorage.removeItem('userImage');
   });
 }
+
+// Check auth state on page load
+window.addEventListener('load', function() {
+  if (sessionStorage.getItem('isAuthenticated') === 'true') {
+    isAuthenticated = true;
+    
+    // Show main content
+    document.getElementById('authScreen').style.display = 'none';
+    document.getElementById('mainContent').style.display = 'block';
+    
+    // Update user info
+    document.getElementById('loginSection').style.display = 'none';
+    document.getElementById('userSection').style.display = 'block';
+    document.getElementById('userName').innerText = sessionStorage.getItem('userName');
+    document.getElementById('userImage').src = sessionStorage.getItem('userImage');
+    
+    // Load data
+    loadTasks();
+  }
+});
 
 var uStatus = [];
 const triggerTabList = document.querySelectorAll("#nav-tab button");
