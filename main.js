@@ -1,5 +1,5 @@
 var myApp =
-  "https://script.google.com/macros/s/AKfycbwha7wX1sorzB7l6a9H6-gG8p65IvUUcFG7j5EZ5-UlMYZSrgrn47M1ctvCX6OWilNl/exec";
+  "https://script.google.com/macros/s/AKfycbz8TzHCxYt0UGgcICwg1NCaWoGOokMCMiwd-ivEtGVnFODtivbJtN6m_p8KPSFstWTp/exec";
 var tasks = "1tUkWfP-Ci68M-bh4nsEI0VxlOoEvvNv64fhwhwivNCU";
 var sName = "Service Control";
 //var eDate = "Активно до: 18.08.2024";
